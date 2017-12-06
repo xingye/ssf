@@ -4,6 +4,10 @@ A command line tool written in Go to list and delete shared files in slack.
 # Install 
 go get github.com/xingye/ssf
 
+# Purpose
+Since [message and storage limits on the free plan](https://get.slack.help/hc/en-us/articles/115002422943-Message-and-storage-limits-on-the-Free-plan) of slack, workspaces on the free plan share a total of 5GB of file storage space. 
+When a workplace file storage space exceeds the limit, you can not upload file any more. You need to go to [website](https://get.slack.help/hc/en-us/articles/218159688-Delete-shared-files) and delete files one by one. It is very inconveniences. So I write this tool to bulk delete files and make life more easy.
+
 # Usage
 To use this tool to list or delete your slack shared files, you need to generate a token first.
 Please refer the [slack file method page](https://api.slack.com/custom-integrations/legacy-tokens).
