@@ -21,12 +21,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
+func init() {
+	deleteCmd.Flags().StringVarP(&user, "user", "u", "", "slack user id")
+}
+
 // deleteCmd represents the delete command
 var deleteCmd = &cobra.Command{
 	Use:   "rm",
 	Short: "Delete all slack shared files",
 	Run: func(cmd *cobra.Command, args []string) {
-		if success, fail, err := slack.DeleteAllFiles(); err != nil {
+		if success, fail, err := slack.DeleteAllFiles(user); err != nil {
 			log.Error().Msgf("delete all fils error:%+v\n", err)
 		} else {
 			if len(fail) > 0 {

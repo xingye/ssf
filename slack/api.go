@@ -20,8 +20,8 @@ const (
 	deleteUrl = "https://slack.com/api/files.delete"
 )
 
-func ListAllFiles() ([]model.File, error) {
-	res, err := listFile(1)
+func ListAllFiles(user string) ([]model.File, error) {
+	res, err := listFile(user, 1)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +44,7 @@ func ListAllFiles() ([]model.File, error) {
 		go func(index int) {
 			defer wg.Done()
 
-			res, err = listFile(index)
+			res, err = listFile(user, index)
 			if err != nil {
 				log.Error().Msgf("list file with page:%d error:%+v\n", index, err)
 				return
@@ -65,8 +65,8 @@ func ListAllFiles() ([]model.File, error) {
 	return result, nil
 }
 
-func DeleteAllFiles() ([]string, []string, error) {
-	files, err := ListAllFiles()
+func DeleteAllFiles(user string) ([]string, []string, error) {
+	files, err := ListAllFiles(user)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -112,7 +112,7 @@ func DeleteFiles(files []model.File) (success []string, fail []string) {
 func deleteFile(id string) error {
 	form := url.Values{}
 	form.Add("file", id)
-	form.Add("token", config.Slack.Token)
+	form.Add("token", config.GetToken())
 
 	req, err := http.NewRequest("POST", deleteUrl, strings.NewReader(form.Encode()))
 	if err != nil {
@@ -148,15 +148,15 @@ func deleteFile(id string) error {
 	return nil
 }
 
-func listFile(page int) (*model.ListResponse, error) {
+func listFile(user string, page int) (*model.ListResponse, error) {
 
 	values := url.Values{
-		"token": []string{config.Slack.Token},
+		"token": []string{config.GetToken()},
 		"page":  []string{strconv.Itoa(page)},
 	}
 
-	if config.Slack.User != "" {
-		values.Add("user", config.Slack.User)
+	if user != "" {
+		values.Add("user", user)
 	}
 
 	res, err := http.PostForm(listUrl, values)

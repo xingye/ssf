@@ -17,14 +17,12 @@ package main
 import (
 	"os"
 	"ssf/cmd"
-	"ssf/config"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
 func main() {
-	config.Initialize()
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout})
 	cmd.Execute()
 }

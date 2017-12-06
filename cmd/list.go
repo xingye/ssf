@@ -25,12 +25,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var user string
+
+func init() {
+	listCmd.Flags().StringVarP(&user, "user", "u", "", "slack user id")
+}
+
 // listCmd represents the list command
 var listCmd = &cobra.Command{
 	Use:   "ls",
 	Short: "List all slack shared files",
 	Run: func(cmd *cobra.Command, args []string) {
-		files, err := slack.ListAllFiles()
+		files, err := slack.ListAllFiles(user)
 		if err != nil {
 			log.Error().Msgf("list files error:%+v\n", err)
 			return
