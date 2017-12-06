@@ -4,7 +4,7 @@ A command line tool written in Go to list and delete shared files in slack.
 # Install 
 go get github.com/xingye/ssf
 
-#Usage
+# Usage
 To use this tool to list or delete your slack shared files, you need to generate a token first.
 Please refer the [slack file method page](https://api.slack.com/custom-integrations/legacy-tokens).
 If you are workplace owner and admin, you can delete any file you want. If you are a member and guest,
