@@ -3,7 +3,6 @@ package slack
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"ssf/config"
@@ -18,6 +17,7 @@ import (
 const (
 	listUrl   = "https://slack.com/api/files.list"
 	deleteUrl = "https://slack.com/api/files.delete"
+	authUrl   = "https://slack.com/api/auth.test"
 )
 
 func ListAllFiles(user string) ([]model.File, error) {
@@ -109,6 +109,35 @@ func DeleteFiles(files []model.File) (success []string, fail []string) {
 	return
 }
 
+func GetUserId() (string, error) {
+	form := url.Values{}
+	form.Add("token", config.GetToken())
+
+	req, err := http.NewRequest("POST", authUrl, strings.NewReader(form.Encode()))
+	if err != nil {
+		return "", err
+	}
+
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	result, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+
+	defer result.Body.Close()
+
+	var res model.AuthResponse
+	if err = json.NewDecoder(result.Body).Decode(&res); err != nil {
+		return "", err
+	}
+
+	if !res.Ok {
+		return "", errorOrUnknow(res.Error)
+	}
+	return res.User, nil
+}
+
 func deleteFile(id string) error {
 	form := url.Values{}
 	form.Add("file", id)
@@ -127,23 +156,18 @@ func deleteFile(id string) error {
 	}
 	defer result.Body.Close()
 
-	b, err := ioutil.ReadAll(result.Body)
-	if err != nil {
-		return err
-	}
-
 	type deleteRes struct {
 		Ok    bool   `json:"ok"`
 		Error string `json:"error"`
 	}
 
 	var res deleteRes
-	if err = json.Unmarshal(b, &res); err != nil {
+	if err = json.NewDecoder(result.Body).Decode(&res); err != nil {
 		return err
 	}
 
 	if !res.Ok {
-		return errors.New(res.Error)
+		return errorOrUnknow(res.Error)
 	}
 	return nil
 }
@@ -162,22 +186,21 @@ func listFile(user string, page int) (*model.ListResponse, error) {
 	res, err := http.PostForm(listUrl, values)
 	defer res.Body.Close()
 
-	b, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return nil, err
-	}
-
 	var list model.ListResponse
-	if err = json.Unmarshal(b, &list); err != nil {
+	if err = json.NewDecoder(res.Body).Decode(&list); err != nil {
 		return nil, err
 	}
 
 	if !list.Ok {
-		reason := list.Error
-		if reason == "" {
-			reason = "unknow error"
-		}
-		return nil, errors.New(reason)
+		return nil, errorOrUnknow(list.Error)
 	}
 	return &list, nil
+}
+
+func errorOrUnknow(reason string) error {
+	var errc = reason
+	if errc == "" {
+		errc = "Unknow"
+	}
+	return errors.New(errc)
 }
