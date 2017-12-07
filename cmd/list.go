@@ -43,7 +43,7 @@ var listCmd = &cobra.Command{
 		}
 
 		const nameLen = 20
-		const layout = "2006-01-02 15:04-05"
+		const layout = "2006-01-02 15:04:05"
 		var date time.Time
 		var dateStr string
 

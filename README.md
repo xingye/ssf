@@ -2,7 +2,12 @@
 A command line tool written in Go to list and delete shared files in slack.
 
 # Install 
-go get github.com/xingye/ssf
+1. clone this repo
+2. cd ssf/
+3. go get ./...
+4. go install
+
+**Note** add your **go-workplace/bin** directory to path, so that you can exec **ssf** command in everywhere.
 
 # Purpose
 Since [message and storage limits on the free plan](https://get.slack.help/hc/en-us/articles/115002422943-Message-and-storage-limits-on-the-Free-plan) of slack, workspaces on the free plan share a total of 5GB of file storage space. 
@@ -16,7 +21,8 @@ you can only delete your own files. In order to list your own files, you can pro
 token is required. For your convenience, you can **export** your token and user id as **ssf_token** and **ssf_user**
 before using this tool.
 
-![command](/src/command.png)
+![command](/src/command1.png)
+![command](/src/command2.png)
 
 # Todo
 1. Make progress bar in terminal when listing or deleting files.
