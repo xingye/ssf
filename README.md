@@ -22,8 +22,6 @@ token is required. If u option missing, it will list all the flies of the workpl
 you can **export** your token as **ssf_token** before using this tool. Btw, You can use command**ssf echo** to 
 show your slack user id.
 
-![command](/src/command1.png)
-![command](/src/command2.png)
+![command](/src/img.png)
 
-# Todo
-1. Provide option to delete one file or specific files meeting condition(such as older than 7 days).
+
