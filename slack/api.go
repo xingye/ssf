@@ -3,6 +3,8 @@ package slack
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"ssf/config"
@@ -10,8 +12,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-
-	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -25,6 +25,7 @@ func ListAllFiles(user string) ([]model.File, error) {
 	if err != nil {
 		return nil, err
 	}
+	//return res.Files, nil
 
 	totalPages := res.PageInfo.Pages
 	curPage := res.PageInfo.Page
@@ -46,7 +47,7 @@ func ListAllFiles(user string) ([]model.File, error) {
 
 			res, err = listFile(user, index)
 			if err != nil {
-				log.Error().Msgf("list file with page:%d error:%+v\n", index, err)
+				log.Printf("list file with page:%d error:%+v\n", index, err)
 				return
 			}
 			ch <- res.Files
@@ -63,6 +64,7 @@ func ListAllFiles(user string) ([]model.File, error) {
 	}
 
 	return result, nil
+
 }
 
 func DeleteAllFiles(user string) ([]string, []string, error) {
@@ -71,11 +73,33 @@ func DeleteAllFiles(user string) ([]string, []string, error) {
 		return nil, nil, err
 	}
 
-	success, fail := DeleteFiles(files)
+	var ids = make([]string, len(files))
+	for i, f := range files {
+		ids[i] = f.Id
+	}
+
+	success, fail := DeleteFiles(ids)
 	return success, fail, nil
 }
 
-func DeleteFiles(files []model.File) (success []string, fail []string) {
+func DeleteFilesWithFilter(user string, filter func(model.File) bool) ([]string, []string, error) {
+	files, err := ListAllFiles(user)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var result []string
+	for _, file := range files {
+		if filter(file) {
+			result = append(result, file.Id)
+		}
+	}
+
+	success, fail := DeleteFiles(result)
+	return success, fail, nil
+}
+
+func DeleteFiles(files []string) (success []string, fail []string) {
 	var wg sync.WaitGroup
 	var ch = make(chan map[string]string)
 
@@ -85,12 +109,13 @@ func DeleteFiles(files []model.File) (success []string, fail []string) {
 		go func(id string) {
 			defer wg.Done()
 
+			fmt.Println("delete file:", id)
 			if err := deleteFile(id); err != nil {
 				ch <- map[string]string{"fail": id}
 			} else {
 				ch <- map[string]string{"success": id}
 			}
-		}(file.Id)
+		}(file)
 	}
 
 	go func() {
@@ -173,7 +198,6 @@ func deleteFile(id string) error {
 }
 
 func listFile(user string, page int) (*model.ListResponse, error) {
-
 	values := url.Values{
 		"token": []string{config.GetToken()},
 		"page":  []string{strconv.Itoa(page)},

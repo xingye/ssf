@@ -15,14 +15,26 @@
 package cmd
 
 import (
+	"fmt"
+	"log"
+	"ssf/model"
 	"ssf/slack"
+	"time"
 
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
+var before string
+var after string
+var fileIds []string
+var days int
+
 func init() {
 	deleteCmd.Flags().StringVarP(&user, "user", "u", "", "slack user id")
+	deleteCmd.Flags().IntVarP(&days, "days", "d", 0, "delete all files that were created more than 'days' late")
+	deleteCmd.Flags().StringVarP(&before, "before", "b", "", "delete all files that were created before the date")
+	deleteCmd.Flags().StringVarP(&after, "after", "a", "", "delete all files that were created after the date")
+	deleteCmd.Flags().StringSliceVarP(&fileIds, "files", "f", nil, "delete the specific files")
 }
 
 // deleteCmd represents the delete command
@@ -30,16 +42,33 @@ var deleteCmd = &cobra.Command{
 	Use:   "rm",
 	Short: "Delete all slack shared files",
 	Run: func(cmd *cobra.Command, args []string) {
-		if success, fail, err := slack.DeleteAllFiles(user); err != nil {
-			log.Error().Msgf("delete all fils error:%+v\n", err)
-		} else {
-			if len(fail) > 0 {
-				log.Info().Msgf("%d files has deleted successfully.\n", len(success))
-				log.Warn().Msgf("%d files failed.\n", len(fail))
-			} else {
-				log.Info().Msgf("Great! Delete %d files successfully.\n", len(success))
-			}
+		flagSet := cmd.Flags()
+		if (flagSet.NFlag() == 1 && user != "") || (flagSet.NFlag() == 0) {
+			deleteAll()
+			return
 		}
+
+		if len(fileIds) > 0 {
+			delete(fileIds)
+			return
+		}
+
+		var filter func(model.File) bool
+
+		if before != "" {
+			filter = beforeFilter
+		} else if after != "" {
+			filter = afterFilter
+		} else if days > 0 {
+			filter = daysFilter
+		}
+
+		success, fail, err := slack.DeleteFilesWithFilter(user, filter)
+		if err != nil {
+			log.Println("delete fail. error:", err)
+			return
+		}
+		logSummary(success, fail)
 	},
 }
 
@@ -55,4 +84,78 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// deleteCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+}
+
+func deleteAll() {
+	if success, fail, err := slack.DeleteAllFiles(user); err != nil {
+		log.Fatalf("delete all fils error:%+v\n", err)
+	} else {
+		if len(fail) > 0 {
+			log.Printf("%d files have deleted successfully.\n", len(success))
+			log.Printf("%d files failed.\n", len(fail))
+		} else {
+			log.Printf("Great! Delete %d files successfully.\n", len(success))
+		}
+	}
+}
+
+func delete(files []string) {
+	logSummary(slack.DeleteFiles(files))
+}
+
+func parse(date string) (*time.Time, error) {
+	layout := "2006-01-02"
+	result, err := time.ParseInLocation(layout, date, time.Local)
+	if err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+func validate(cmd *cobra.Command) {
+	flagSet := cmd.Flags()
+	count := 1
+	if flagSet.Lookup("user") != nil {
+		count = 2
+	}
+
+	if flagSet.NFlag() > count {
+		log.Fatalln("a, b, d, f option must be exclusive")
+	}
+}
+
+func beforeFilter(file model.File) bool {
+	date, err := parse(before)
+	if err != nil {
+		log.Fatalf("parse daete error:%+v\nPlease use YYYY-MM-DD format", err)
+	}
+	if file.CreatedDateWithoutTime().Before(*date) {
+		return true
+	}
+	return false
+}
+
+func afterFilter(file model.File) bool {
+	date, err := parse(after)
+	if err != nil {
+		log.Fatalf("parse daete error:%+v\nPlease use YYYY-MM-DD format", err)
+	}
+	if file.CreatedDateWithoutTime().After(*date) {
+		return true
+	}
+	return false
+}
+
+func daysFilter(file model.File) bool {
+	now := time.Now()
+	now = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
+	if file.CreatedDateWithoutTime().Sub(now).Hours()/24 > float64(days) {
+		return true
+	}
+	return false
+}
+
+func logSummary(success []string, fail []string) {
+	fmt.Printf("%d files have deleted successfully.\n", len(success))
+	fmt.Printf("%d files failed.\n", len(fail))
 }

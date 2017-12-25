@@ -2,10 +2,10 @@ package config
 
 import (
 	"errors"
+	"log"
 	"os"
 
 	"github.com/manifoldco/promptui"
-	"github.com/rs/zerolog/log"
 )
 
 var token string
@@ -30,8 +30,8 @@ func GetToken() string {
 		prompt := promptui.Prompt{Label: "Input token", Validate: validate}
 		token, err = prompt.Run()
 		if err != nil {
-			log.Fatal().Msgf("invalid token. error:%+v\n", err)
-			return ""
+			log.Fatalln("invalid token.")
+			//return ""
 		}
 	}
 

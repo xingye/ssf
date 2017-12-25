@@ -36,9 +36,15 @@ var listCmd = &cobra.Command{
 	Use:   "ls",
 	Short: "List all slack shared files",
 	Run: func(cmd *cobra.Command, args []string) {
+
 		files, err := slack.ListAllFiles(user)
 		if err != nil {
 			log.Error().Msgf("list files error:%+v\n", err)
+			return
+		}
+
+		if len(files) == 0 {
+			fmt.Println("You have no file.")
 			return
 		}
 

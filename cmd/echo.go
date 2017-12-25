@@ -16,10 +16,9 @@ package cmd
 
 import (
 	"fmt"
-
+	"log"
 	"ssf/slack"
 
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
@@ -29,7 +28,7 @@ var echoCmd = &cobra.Command{
 	Short: "echo your slack user id",
 	Run: func(cmd *cobra.Command, args []string) {
 		if user, err := slack.GetUserId(); err != nil {
-			log.Error().Msgf("echo user id error:%v\n", err)
+			log.Fatalf("echo user id error:%v\n", err)
 		} else {
 			fmt.Println("Your slack user id:", user)
 		}
