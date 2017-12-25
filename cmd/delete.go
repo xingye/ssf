@@ -32,9 +32,9 @@ var days int
 func init() {
 	deleteCmd.Flags().StringVarP(&user, "user", "u", "", "slack user id")
 	deleteCmd.Flags().IntVarP(&days, "days", "d", 0, "delete all files that were created more than 'days' late")
-	deleteCmd.Flags().StringVarP(&before, "before", "b", "", "delete all files that were created before the date")
-	deleteCmd.Flags().StringVarP(&after, "after", "a", "", "delete all files that were created after the date")
-	deleteCmd.Flags().StringSliceVarP(&fileIds, "files", "f", nil, "delete the specific files")
+	deleteCmd.Flags().StringVarP(&before, "before", "b", "", "delete all files that were created before the date(YYYY-MM-DD)")
+	deleteCmd.Flags().StringVarP(&after, "after", "a", "", "delete all files that were created after the date(YYYY-MM-DD)")
+	deleteCmd.Flags().StringSliceVarP(&fileIds, "files", "f", nil, "delete the specific files(F7F9FQM50,F7GC0DL9M...)")
 }
 
 // deleteCmd represents the delete command
