@@ -18,8 +18,8 @@ To use this tool to list or delete your slack shared files, you need to generate
 Please refer the [slack file method page](https://api.slack.com/custom-integrations/legacy-tokens).
 If you are workplace owner and admin, you can delete any file you want. If you are a member and guest,
 you can only delete your own files. In order to list your own files, you can provide your user id, but 
-token is required. If u option missing, it will list all the flies of the workplace. For your convenience, 
-you can **export** your token as **ssf_token** before using this tool. Btw, You can use command**ssf echo** to 
+token is required. If **u option** missing, it will list all the flies of the workplace. For your convenience, 
+you can **export** your token as **ssf_token** before using this tool. Btw, You can use command **ssf echo** to 
 show your slack user id.
 
 ![command](/src/img.png)
